@@ -14,13 +14,6 @@ import * as echarts from 'echarts';
 import type { EChartsOption, ECharts as EChartsInstance } from 'echarts';
 import { cn } from './utils';
 
-// Type for callback references from Python
-interface CallbackRef {
-  callbackId: string;
-  args?: Record<string, unknown>;
-  throttle?: number;
-}
-
 // ECharts event params type
 interface EChartsEventParams {
   componentType?: string;
@@ -35,6 +28,9 @@ interface EChartsEventParams {
   color?: string;
   event?: MouseEvent;
 }
+
+// Event handler type - receives serialized event params
+type EventHandler = (data: Record<string, unknown>) => void;
 
 export interface EChartsProps {
   id?: string;
@@ -67,33 +63,19 @@ export interface EChartsProps {
     fontFamily?: string;
   };
   
-  // Event callbacks
-  onClick?: CallbackRef;
-  onDblclick?: CallbackRef;
-  onMousedown?: CallbackRef;
-  onMousemove?: CallbackRef;
-  onMouseup?: CallbackRef;
-  onMouseover?: CallbackRef;
-  onMouseout?: CallbackRef;
-  onGlobalout?: CallbackRef;
-  onContextmenu?: CallbackRef;
+  // Event callbacks - these are handler functions created by ComponentRenderer
+  onClick?: EventHandler;
+  onDblclick?: EventHandler;
+  onMousedown?: EventHandler;
+  onMousemove?: EventHandler;
+  onMouseup?: EventHandler;
+  onMouseover?: EventHandler;
+  onMouseout?: EventHandler;
+  onGlobalout?: EventHandler;
+  onContextmenu?: EventHandler;
   
   // Refast internal
   'data-refast-id'?: string;
-}
-
-// Helper to invoke callbacks via WebSocket
-function invokeCallback(callback: CallbackRef | undefined, data: Record<string, unknown> = {}): void {
-  if (!callback?.callbackId) return;
-  
-  const ws = (window as unknown as { __REFAST_WS__?: WebSocket }).__REFAST_WS__;
-  if (ws && ws.readyState === WebSocket.OPEN) {
-    ws.send(JSON.stringify({
-      type: 'callback',
-      callbackId: callback.callbackId,
-      data: { ...data, ...(callback.args || {}) },
-    }));
-  }
 }
 
 // Serialize ECharts event params to plain object
@@ -159,8 +141,8 @@ export const ECharts: React.FC<EChartsProps> = ({
       chart.setOption(option);
     }
 
-    // Setup event handlers
-    const events: Array<[string, CallbackRef | undefined]> = [
+    // Setup event handlers - callbacks are already handler functions from ComponentRenderer
+    const events: Array<[string, EventHandler | undefined]> = [
       ['click', onClick],
       ['dblclick', onDblclick],
       ['mousedown', onMousedown],
@@ -172,10 +154,11 @@ export const ECharts: React.FC<EChartsProps> = ({
       ['contextmenu', onContextmenu],
     ];
 
-    events.forEach(([eventName, callback]) => {
-      if (callback) {
-        chart.on(eventName, (params: EChartsEventParams) => {
-          invokeCallback(callback, serializeEventParams(params));
+    events.forEach(([eventName, handler]) => {
+      if (handler) {
+        chart.on(eventName, (params: unknown) => {
+          // Call the handler with serialized event params
+          handler(serializeEventParams(params as EChartsEventParams));
         });
       }
     });

@@ -20,8 +20,7 @@ from fastapi import FastAPI
 from refast import RefastApp, Context
 from refast.components import (
     Container, Card, CardHeader, CardTitle, CardContent, CardDescription,
-    Text, Button, Row, Column, Select,
-    Badge, Separator,
+    Text, Button, Row, Column, Badge, Separator, ThemeSwitcher
 )
 
 from refast_echarts import ECharts
@@ -36,15 +35,16 @@ ui = RefastApp(title="ECharts Demo - Comprehensive Examples")
 
 async def handle_chart_click(ctx: Context):
     """Handle click events from charts."""
-    data = ctx.event.data
+    data = ctx.event_data
     info = f"Clicked: {data.get('seriesName', 'N/A')} - {data.get('name', 'N/A')}: {data.get('value', 'N/A')}"
     print(f"[click] {info}")
-    await ctx.update_text("event-info", info)
+    await ctx.append("event-info", Text(info, class_name="block"))
+    # await ctx.update_text("event-info", info)
 
 
 async def handle_chart_dblclick(ctx: Context):
     """Handle double-click events."""
-    data = ctx.event.data
+    data = ctx.event_data
     info = f"Double-clicked: {data.get('name', 'N/A')}"
     print(f"[dblclick] {info}")
     await ctx.update_text("event-info", info)
@@ -52,7 +52,7 @@ async def handle_chart_dblclick(ctx: Context):
 
 async def handle_chart_hover(ctx: Context):
     """Handle mouseover events."""
-    data = ctx.event.data
+    data = ctx.event_data
     if data.get('name'):
         info = f"Hovering: {data.get('name')}"
         await ctx.update_text("hover-info", info)
@@ -61,6 +61,16 @@ async def handle_chart_hover(ctx: Context):
 async def handle_chart_mouseout(ctx: Context):
     """Handle mouseout events."""
     await ctx.update_text("hover-info", "Hover over chart elements...")
+
+
+async def theme_switched(ctx: Context):
+    """Handle theme switcher changes."""
+    new_theme = ctx.event_data["value"]  # 'light' or 'dark'
+    print(f"[theme switched] New theme: {new_theme}")
+    for chart in ["bar-chart", "line-chart", "pie-chart", "scatter-chart",
+                  "radar-chart", "gauge-chart", "heatmap-chart"]:
+        await ctx.update_props(chart, {"theme": new_theme})
+    await ctx.update_text("event-info", f"Theme switched to: {new_theme}")
 
 
 # ============================================================================
@@ -89,7 +99,7 @@ async def update_line_chart_data(ctx: Context):
             {"data": new_data2}
         ]
     }
-    await ctx.call_bound_js("line-chart", "setOption", new_option)
+    await ctx.update_props("line-chart", {"option": new_option})
     await ctx.update_text("event-info", "Line chart updated!")
 
 
@@ -488,14 +498,19 @@ def home(ctx: Context):
         class_name="max-w-7xl mx-auto py-8 px-4 space-y-8",
         children=[
             # Header
-            Column(
-                class_name="text-center space-y-2 mb-8",
+            Row(
+                class_name="space-y-2 mb-8 justify-between",
                 children=[
+                    Column(
+                        children=[
                     Text("ECharts Extension for Refast", class_name="text-3xl font-bold"),
                     Text(
                         "Interactive charts with full event support, theming, and dynamic updates",
                         class_name="text-muted-foreground text-lg"
                     ),
+                        ]
+                    ),
+                    ThemeSwitcher(on_change=ctx.callback(theme_switched)),
                 ]
             ),
             
@@ -532,7 +547,7 @@ def home(ctx: Context):
             
             # Row 1: Bar and Line Charts
             Row(
-                class_name="gap-6",
+                gap=6,
                 children=[
                     # Bar Chart
                     Card(
@@ -561,6 +576,7 @@ def home(ctx: Context):
                                         id="bar-chart",
                                         option=get_bar_option(),
                                         on_click=ctx.callback(handle_chart_click),
+                                        # on_click=ctx.js(handle_chart_click),
                                         on_dblclick=ctx.callback(handle_chart_dblclick),
                                         height="300px",
                                         theme="light",
@@ -622,7 +638,7 @@ def home(ctx: Context):
             
             # Row 2: Pie and Scatter Charts
             Row(
-                class_name="gap-6",
+                gap=6,
                 children=[
                     # Pie Chart
                     Card(
@@ -709,7 +725,7 @@ def home(ctx: Context):
             
             # Row 3: Radar and Gauge Charts
             Row(
-                class_name="gap-6",
+                gap=6,
                 children=[
                     # Radar Chart
                     Card(
@@ -732,7 +748,6 @@ def home(ctx: Context):
                                 ]
                             ),
                             CardContent(
-                                class_name="space-y-4",
                                 children=[
                                     ECharts(
                                         id="radar-chart",
@@ -743,7 +758,7 @@ def home(ctx: Context):
                                         auto_resize=True,
                                     ),
                                     Row(
-                                        class_name="gap-2",
+                                        gap=2,
                                         children=[
                                             Button(
                                                 "Clear",
