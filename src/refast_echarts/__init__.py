@@ -56,7 +56,6 @@ class EchartsExtension(Extension):
         return Path(__file__).parent / "static"
 
     @property
-    @property
     def components(self) -> list:
         """List of Python component classes provided by this extension."""
         return [ECharts]
