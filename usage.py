@@ -65,9 +65,23 @@ async def handle_chart_dblclick(ctx: Context):
 async def handle_chart_hover(ctx: Context):
     """Handle mouseover events."""
     data = ctx.event_data
-    if data.get("name"):
-        info = f"Hovering: {data.get('name')}"
-        await ctx.update_text("hover-info", info)
+    name = data.get("name")
+    series_name = data.get("seriesName")
+    data_index = data.get("dataIndex")
+    value = data.get("value")
+
+    if name:
+        info = f"Hovering: {name}"
+    elif series_name is not None and data_index is not None:
+        info = f"Hovering: {series_name} [{data_index}]"
+    elif series_name:
+        info = f"Hovering: {series_name}"
+    elif value is not None:
+        info = f"Hovering value: {value}"
+    else:
+        info = "Hovering chart element"
+
+    await ctx.update_text("hover-info", info)
 
 
 async def handle_chart_mouseout(ctx: Context):
@@ -767,6 +781,8 @@ def home(ctx: Context):
                                         id="bar-chart",
                                         option=get_bar_option(),
                                         on_click=ctx.callback(handle_chart_click),
+                                        on_mouseover=ctx.callback(handle_chart_hover),
+                                        on_mouseout=ctx.callback(handle_chart_mouseout),
                                         # on_click=ctx.js(handle_chart_click),
                                         on_dblclick=ctx.callback(handle_chart_dblclick),
                                         height="300px",
@@ -864,6 +880,8 @@ def home(ctx: Context):
                                         id="pie-chart",
                                         option=get_pie_option(),
                                         on_click=ctx.callback(handle_chart_click),
+                                        on_mouseover=ctx.callback(handle_chart_hover),
+                                        on_mouseout=ctx.callback(handle_chart_mouseout),
                                         height="300px",
                                         theme="light",
                                         auto_resize=True,
@@ -907,6 +925,8 @@ def home(ctx: Context):
                                         id="scatter-chart",
                                         option=get_scatter_option(),
                                         on_click=ctx.callback(handle_chart_click),
+                                        on_mouseover=ctx.callback(handle_chart_hover),
+                                        on_mouseout=ctx.callback(handle_chart_mouseout),
                                         height="300px",
                                         theme="light",
                                         auto_resize=True,
@@ -957,6 +977,8 @@ def home(ctx: Context):
                                         id="radar-chart",
                                         option=get_radar_option(),
                                         on_click=ctx.callback(handle_chart_click),
+                                        on_mouseover=ctx.callback(handle_chart_hover),
+                                        on_mouseout=ctx.callback(handle_chart_mouseout),
                                         height="310px",
                                         theme="light",
                                         auto_resize=True,
@@ -1016,6 +1038,8 @@ def home(ctx: Context):
                                         id="gauge-chart",
                                         option=get_gauge_option(),
                                         on_click=ctx.callback(handle_chart_click),
+                                        on_mouseover=ctx.callback(handle_chart_hover),
+                                        on_mouseout=ctx.callback(handle_chart_mouseout),
                                         height="350px",
                                         theme="light",
                                         auto_resize=True,
@@ -1056,6 +1080,8 @@ def home(ctx: Context):
                                 id="heatmap-chart",
                                 option=get_heatmap_option(),
                                 on_click=ctx.callback(handle_chart_click),
+                                on_mouseover=ctx.callback(handle_chart_hover),
+                                on_mouseout=ctx.callback(handle_chart_mouseout),
                                 height="350px",
                                 theme="light",
                                 auto_resize=True,
@@ -1094,6 +1120,8 @@ def home(ctx: Context):
                                 id="sankey-chart",
                                 option=get_sankey_option(),
                                 on_click=ctx.callback(handle_chart_click),
+                                on_mouseover=ctx.callback(handle_chart_hover),
+                                on_mouseout=ctx.callback(handle_chart_mouseout),
                                 height="600px",
                                 theme="light",
                                 auto_resize=True,
@@ -1132,6 +1160,8 @@ def home(ctx: Context):
                                 id="nightingale-chart",
                                 option=get_nightingale_option(),
                                 on_click=ctx.callback(handle_chart_click),
+                                on_mouseover=ctx.callback(handle_chart_hover),
+                                on_mouseout=ctx.callback(handle_chart_mouseout),
                                 height="600px",
                                 theme="light",
                                 auto_resize=True,
@@ -1170,6 +1200,8 @@ def home(ctx: Context):
                                 id="chord-chart",
                                 option=get_chord_option(),
                                 on_click=ctx.callback(handle_chart_click),
+                                on_mouseover=ctx.callback(handle_chart_hover),
+                                on_mouseout=ctx.callback(handle_chart_mouseout),
                                 height="500px",
                                 theme="light",
                                 auto_resize=True,
@@ -1216,6 +1248,8 @@ def home(ctx: Context):
                                 id="dark-chart",
                                 option=get_bar_option(),
                                 on_click=ctx.callback(handle_chart_click),
+                                on_mouseover=ctx.callback(handle_chart_hover),
+                                on_mouseout=ctx.callback(handle_chart_mouseout),
                                 height="300px",
                                 theme="dark",
                                 auto_resize=True,
