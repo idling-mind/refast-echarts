@@ -90,3 +90,4 @@ src/refast_echarts/static/*.css
 # OS files
 .DS_Store
 Thumbs.db
+uv.lock
