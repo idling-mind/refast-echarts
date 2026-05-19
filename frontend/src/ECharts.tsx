@@ -31,6 +31,31 @@ interface EChartsEventParams {
 
 // Event handler type - receives serialized event params
 type EventHandler = (data: Record<string, unknown>) => void;
+type ResizeParams = Parameters<EChartsInstance['resize']>[0];
+
+function resolveTheme(
+  theme: string | object | undefined
+): string | object | undefined {
+  if (theme == null) {
+    const root = document.documentElement;
+    if (root.dataset.theme === 'dark' || root.classList.contains('dark')) {
+      return 'dark';
+    }
+
+    const body = document.body;
+    if (body?.dataset.theme === 'dark' || body?.classList.contains('dark')) {
+      return 'dark';
+    }
+
+    return window.matchMedia?.('(prefers-color-scheme: dark)')?.matches ? 'dark' : 'light';
+  }
+
+  if (typeof theme === 'string' && theme.toLowerCase() === 'auto') {
+    return resolveTheme(undefined);
+  }
+
+  return theme;
+}
 
 export interface EChartsProps {
   id?: string;
@@ -129,11 +154,7 @@ export const ECharts: React.FC<EChartsProps> = ({
     }
 
     // Create chart instance
-    const chart = echarts.init(
-      containerRef.current,
-      theme as string | object | undefined,
-      initOpts
-    );
+    const chart = echarts.init(containerRef.current, resolveTheme(theme), initOpts);
     chartRef.current = chart;
 
     // Set initial option
@@ -218,12 +239,7 @@ export const ECharts: React.FC<EChartsProps> = ({
     };
 
     // resize - resize the chart
-    (container as unknown as Record<string, unknown>).resize = (opts?: {
-      width?: number | string;
-      height?: number | string;
-      silent?: boolean;
-      animation?: { duration?: number; easing?: string };
-    }) => {
+    (container as unknown as Record<string, unknown>).resize = (opts?: ResizeParams) => {
       chartRef.current?.resize(opts);
     };
 
