@@ -103,6 +103,7 @@ async def theme_switched(ctx: Context):
         "gauge-chart",
         "heatmap-chart",
         "sankey-chart",
+        "parallel-chart",
     ]:
         await ctx.update_props(chart, {"theme": new_theme})
     await ctx.update_text("event-info", f"Theme switched to: {new_theme}")
@@ -672,6 +673,59 @@ def get_chord_option():
     }
 
 
+def get_parallel_option():
+    """Parallel coordinates chart configuration."""
+    return {
+        "title": {"text": "Product Quality Comparison", "left": "center"},
+        "tooltip": {"trigger": "item"},
+        "parallelAxis": [
+            {"dim": 0, "name": "Price", "min": 5, "max": 25},
+            {"dim": 1, "name": "Net Weight", "min": 50, "max": 140},
+            {"dim": 2, "name": "Amount", "min": 40, "max": 100},
+            {
+                "dim": 3,
+                "name": "Score",
+                "type": "category",
+                "data": ["Excellent", "Good", "OK", "Bad"],
+            },
+            {"dim": 4, "name": "Shelf Life (days)", "min": 20, "max": 90},
+            {
+                "dim": 5,
+                "name": "Origin",
+                "type": "category",
+                "data": ["Local", "Imported"],
+            },
+            {"dim": 6, "name": "Customer Rating", "min": 2, "max": 5},
+        ],
+        "parallel": {
+            "left": "6%",
+            "right": "6%",
+            "bottom": "12%",
+            "top": "18%",
+            "parallelAxisDefault": {
+                "type": "value",
+                "nameLocation": "end",
+                "nameTextStyle": {"fontSize": 11},
+            },
+        },
+        "series": {
+            "name": "Products",
+            "type": "parallel",
+            "lineStyle": {"width": 4, "opacity": 0.75},
+            "data": [
+                [12.99, 100, 82, "Good", 45, "Local", 4.2],
+                [9.99, 80, 77, "OK", 30, "Imported", 3.8],
+                [20.0, 120, 60, "Excellent", 75, "Imported", 4.7],
+                [16.5, 110, 88, "Good", 60, "Local", 4.4],
+                [7.5, 70, 55, "Bad", 28, "Local", 2.9],
+                [14.2, 95, 73, "OK", 50, "Imported", 3.5],
+                [22.5, 130, 91, "Excellent", 85, "Imported", 4.9],
+                [11.4, 85, 68, "Good", 40, "Local", 4.0],
+            ],
+        },
+    }
+
+
 # ============================================================================
 # Page Definition
 # ============================================================================
@@ -1194,6 +1248,45 @@ def home(ctx: Context):
                                 on_mouseover=ctx.callback(handle_chart_hover),
                                 on_mouseout=ctx.callback(handle_chart_mouseout),
                                 height="500px",
+                                auto_resize=True,
+                                class_name="flex-1",
+                            ),
+                        ],
+                    ),
+                ],
+            ),
+            # Row 8: Parallel Coordinates Chart (Full Width)
+            Card(
+                class_name="h-full mb-6",
+                children=[
+                    CardHeader(
+                        children=[
+                            Row(
+                                class_name="justify-between items-center",
+                                children=[
+                                    Column(
+                                        children=[
+                                            CardTitle("Parallel Coordinates"),
+                                            CardDescription(
+                                                "Multi-dimensional comparison across price, quality, shelf life, and more"
+                                            ),
+                                        ]
+                                    ),
+                                    Badge("Multi-Dimensional", variant="secondary"),
+                                ],
+                            ),
+                        ]
+                    ),
+                    CardContent(
+                        class_name="h-full",
+                        children=[
+                            ECharts(
+                                id="parallel-chart",
+                                option=get_parallel_option(),
+                                on_click=ctx.callback(handle_chart_click),
+                                on_mouseover=ctx.callback(handle_chart_hover),
+                                on_mouseout=ctx.callback(handle_chart_mouseout),
+                                height="420px",
                                 auto_resize=True,
                                 class_name="flex-1",
                             ),
