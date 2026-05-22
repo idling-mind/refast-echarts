@@ -35,6 +35,11 @@ dependencies = [
 [project.entry-points."refast.extensions"]
 echarts = "refast_echarts:EchartsExtension"
 
+[dependency-groups]
+dev = [
+    "pytest>=9.0.3",
+]
+
 [tool.hatch.build.targets.wheel]
 packages = ["src/refast_echarts"]
 

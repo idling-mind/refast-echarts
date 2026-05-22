@@ -145,13 +145,14 @@ class ECharts(Component):
         return callback
 
     def render(self) -> dict[str, Any]:
-        # Build style dict, applying width/height if specified
-        computed_style = {**self.style}
-        if self.width:
-            computed_style["width"] = self.width
-        if self.height:
-            computed_style["height"] = self.height
-        
+        style = {
+            **self.style,
+            **({"width": self.width} if self.width else {}),
+            **({"height": self.height} if self.height else {}),
+        }
+        # Exclude "style" from extra_props serialization since we build it above
+        extra = {k: v for k, v in self._serialize_extra_props().items() if k != "style"}
+
         return {
             "type": self.component_type,
             "id": self.id,
@@ -162,7 +163,7 @@ class ECharts(Component):
                 "auto_resize": self.auto_resize,
                 "loading": self.loading,
                 "loading_opts": self.loading_opts,
-                "style": computed_style if computed_style else None,
+                "style": style or None,
                 "class_name": self.class_name,
                 # Event callbacks
                 "on_click": self._serialize_callback(self.on_click),
@@ -174,7 +175,7 @@ class ECharts(Component):
                 "on_mouseout": self._serialize_callback(self.on_mouseout),
                 "on_globalout": self._serialize_callback(self.on_globalout),
                 "on_contextmenu": self._serialize_callback(self.on_contextmenu),
-                **self._serialize_extra_props(),
+                **extra,
             },
             "children": self._render_children(),
         }
