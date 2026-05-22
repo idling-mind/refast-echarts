@@ -19,21 +19,32 @@ When you install the package, Refast will automatically discover and load the ex
 ```python
 from fastapi import FastAPI
 from refast import RefastApp, Context
-from refast.components import Container, Button, Row
-from refast_echarts import Echarts
+from refast.components import Container
+from refast_echarts import ECharts
 
-# Extension is auto-discovered, no need to manually register
-ui = RefastApp(title="Echarts Demo")
+ui = RefastApp(title="ECharts Demo")
 
 
 @ui.page("/")
 def home(ctx: Context):
+    option = {
+        "title": {"text": "Monthly Sales"},
+        "tooltip": {},
+        "xAxis": {
+            "data": ["Jan", "Feb", "Mar", "Apr", "May", "Jun"],
+        },
+        "yAxis": {},
+        "series": [
+            {
+                "name": "Sales",
+                "type": "bar",
+                "data": [120, 200, 150, 80, 70, 110],
+            }
+        ],
+    }
     return Container(
         children=[
-            Echarts(
-                id="my-component",
-                value="Hello, World!",
-            ),
+            ECharts(option=option, height="400px"),
         ]
     )
 
@@ -65,10 +76,16 @@ ui = RefastApp(
 
 | Prop | Type | Default | Description |
 |------|------|---------|-------------|
-| `value` | str | "" | The value to display |
-| `on_change` | Callback | None | Called when the value changes |
-| `id` | str | None | Component ID |
-| `class_name` | str | "" | CSS classes to apply |
+| `option` | dict | `{}` | ECharts option configuration object |
+| `theme` | str \| dict | `None` | Theme name (`"light"`, `"dark"`) or custom theme object |
+| `height` | str | `None` | Chart height (e.g. `"400px"`) |
+| `width` | str | `None` | Chart width (e.g. `"100%"`) |
+| `auto_resize` | bool | `True` | Auto-resize chart when container size changes |
+| `loading` | bool | `False` | Show loading animation |
+| `on_click` | Callback | `None` | Fired when clicking on a chart element |
+| `on_mouseover` | Callback | `None` | Fired when hovering over a chart element |
+| `id` | str | `None` | Component ID (required for `setOption` calls) |
+| `class_name` | str | `""` | CSS classes to apply to the container |
 
 ## Development
 
