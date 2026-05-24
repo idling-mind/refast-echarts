@@ -1,6 +1,6 @@
 """Component definitions for Refast extension for ECharts."""
 
-from typing import Any, Literal
+from typing import Any
 
 from refast.components.base import Component
 from refast.components.registry import register_component
