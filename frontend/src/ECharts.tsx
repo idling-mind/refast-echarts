@@ -9,7 +9,7 @@
  * - Bound methods (setOption, resize, clear, etc.)
  */
 
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import * as echarts from 'echarts';
 import type { EChartsOption, ECharts as EChartsInstance } from 'echarts';
 import { cn } from './utils';
@@ -38,14 +38,19 @@ function resolveTheme(
 ): string | object | undefined {
   if (theme == null) {
     const root = document.documentElement;
-    if (root.dataset.theme === 'dark' || root.classList.contains('dark')) {
-      return 'dark';
+    // If data-theme is explicitly set, trust it over the media query
+    if (root.dataset.theme) {
+      return root.dataset.theme === 'dark' ? 'dark' : 'light';
     }
+    if (root.classList.contains('dark')) return 'dark';
+    if (root.classList.contains('light')) return 'light';
 
     const body = document.body;
-    if (body?.dataset.theme === 'dark' || body?.classList.contains('dark')) {
-      return 'dark';
+    if (body?.dataset.theme) {
+      return body.dataset.theme === 'dark' ? 'dark' : 'light';
     }
+    if (body?.classList.contains('dark')) return 'dark';
+    if (body?.classList.contains('light')) return 'light';
 
     return window.matchMedia?.('(prefers-color-scheme: dark)')?.matches ? 'dark' : 'light';
   }
@@ -144,6 +149,35 @@ export const ECharts: React.FC<EChartsProps> = ({
   const chartRef = useRef<EChartsInstance | null>(null);
   const resizeObserverRef = useRef<ResizeObserver | null>(null);
 
+  // Track resolved theme for auto-detection
+  const isAutoTheme = theme == null || (typeof theme === 'string' && theme.toLowerCase() === 'auto');
+  const [resolvedTheme, setResolvedTheme] = useState<string | object | undefined>(() => resolveTheme(theme));
+
+  // Watch for system/DOM theme changes when in auto mode
+  useEffect(() => {
+    if (!isAutoTheme) {
+      setResolvedTheme(theme);
+      return;
+    }
+
+    const update = () => setResolvedTheme(resolveTheme(undefined));
+
+    // Watch prefers-color-scheme
+    const mq = window.matchMedia?.('(prefers-color-scheme: dark)');
+    mq?.addEventListener('change', update);
+
+    // Watch class/data-theme changes on <html> and <body>
+    const observer = new MutationObserver(update);
+    const observerOpts: MutationObserverInit = { attributeFilter: ['class', 'data-theme'], attributes: true };
+    observer.observe(document.documentElement, observerOpts);
+    if (document.body) observer.observe(document.body, observerOpts);
+
+    return () => {
+      mq?.removeEventListener('change', update);
+      observer.disconnect();
+    };
+  }, [isAutoTheme, theme]);
+
   // Initialize chart
   useEffect(() => {
     if (!containerRef.current) return;
@@ -154,7 +188,7 @@ export const ECharts: React.FC<EChartsProps> = ({
     }
 
     // Create chart instance
-    const chart = echarts.init(containerRef.current, resolveTheme(theme), initOpts);
+    const chart = echarts.init(containerRef.current, resolvedTheme, initOpts);
     chartRef.current = chart;
 
     // Set initial option
@@ -204,7 +238,7 @@ export const ECharts: React.FC<EChartsProps> = ({
       }
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [theme]); // Only re-init on theme change
+  }, [resolvedTheme]); // Re-init on theme change (includes auto-detected changes)
 
   // Update option when it changes
   useEffect(() => {

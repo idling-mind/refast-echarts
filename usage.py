@@ -88,27 +88,6 @@ async def handle_chart_mouseout(ctx: Context):
     """Handle mouseout events."""
     await ctx.update_text("hover-info", "Hover over chart elements...")
 
-
-async def theme_switched(ctx: Context):
-    """Handle theme switcher changes."""
-    new_theme = ctx.event_data["value"]  # 'light' or 'dark'
-    print(f"[theme switched] New theme: {new_theme}")
-    for chart in [
-        "bar-chart",
-        "line-chart",
-        "pie-chart",
-        "nightingale-chart",
-        "scatter-chart",
-        "radar-chart",
-        "gauge-chart",
-        "heatmap-chart",
-        "sankey-chart",
-        "parallel-chart",
-    ]:
-        await ctx.update_props(chart, {"theme": new_theme})
-    await ctx.update_text("event-info", f"Theme switched to: {new_theme}")
-
-
 # ============================================================================
 # Update Functions
 # ============================================================================
@@ -754,7 +733,7 @@ def home(ctx: Context):
                             ),
                         ]
                     ),
-                    ThemeSwitcher(on_change=ctx.callback(theme_switched)),
+                    ThemeSwitcher(),
                 ],
             ),
             # Event Info Bar
