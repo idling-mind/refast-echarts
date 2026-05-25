@@ -42,6 +42,10 @@ dev = [
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/refast_echarts"]
+artifacts = [
+    "src/refast_echarts/static/*.js",
+    "src/refast_echarts/static/*.css",
+]
 
 [tool.hatch.build.targets.sdist]
 include = [
